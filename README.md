@@ -1,4 +1,3 @@
-# fin_report_qa
 # 📊 Financial Report RAG QA System
 
 A production-oriented Retrieval-Augmented Generation (RAG) application that extracts insights from financial reports (PDFs) and answers user queries using LLMs.
