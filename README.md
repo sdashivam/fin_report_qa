@@ -21,7 +21,7 @@ This project implements an **end-to-end RAG pipeline** with:
 
 ## 🏗️ Architecture
 
-![RAG Architecture](./assets/rag_architecture.png)
+![RAG Architecture](./assets/architecture.png)
 
 ### 🔍 Pipeline Breakdown
 
