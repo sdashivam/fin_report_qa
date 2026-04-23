@@ -4,239 +4,219 @@ A production-oriented Retrieval-Augmented Generation (RAG) application that extr
 
 ---
 
-# 🚀 Overview
+## 🚀 Overview
 
-This project enables users to:
+This project implements an **end-to-end RAG pipeline** with:
 
-* Upload financial reports (annual reports, 10-K, etc.)
-* Ask natural language questions
-* Get grounded, context-aware answers
-
-It uses a **RAG pipeline** combining:
-
-* Document parsing
-* Vector search
-* Large Language Models (LLMs)
-
----
-
-# 🧠 Architecture
-
-## 🔹 Query Flow
-
-```
-User (Streamlit UI)
-        ↓
-FastAPI Backend
-        ↓
-Embedding Model
-        ↓
-Vector Database (Top-K Retrieval)
-        ↓
-LLM (Answer Generation)
-        ↓
-Response to User
-```
-
-## 🔹 Ingestion Flow
-
-```
-PDF Upload
-   ↓
-Text Extraction
-   ↓
-Chunking
-   ↓
-Embeddings
-   ↓
-Vector Database Storage
-```
+* 📄 Data ingestion & cleaning (PDFs, reports)
+* ✂️ Section-aware chunking & embeddings
+* 🔎 Semantic retrieval using FAISS
+* 🧠 Controlled reasoning pipeline (query decomposition + aggregation)
+* 🛡️ Hallucination mitigation & fallback strategies
+* 📊 Evaluation (precision@k, relevance, groundedness)
+* 🌐 Streamlit UI + FastAPI backend
+* ☁️ Deployment on Vertex AI with Docker
 
 ---
 
-# 🧩 Tech Stack
+## 🏗️ Architecture
 
-| Layer      | Technology                            |
-| ---------- | ------------------------------------- |
-| Frontend   | Streamlit                             |
-| Backend    | FastAPI                               |
-| LLM        | Vertex AI (Gemini) / OpenAI           |
-| Embeddings | Vertex AI                             |
-| Vector DB  | Vertex AI Vector Search / FAISS (dev) |
-| Storage    | GCS / Local                           |
-| Parsing    | PyMuPDF                               |
-| Deployment | Docker                                |
-| CI/CD      | GitHub Actions                        |
+![RAG Architecture](./assets/rag_architecture.png)
 
----
+### 🔍 Pipeline Breakdown
 
-# 📁 Project Structure
+**Ingestion Pipeline**
 
-```
-rag-finance-app/
-│
-├── backend/
-│   ├── main.py
-│   ├── rag/
-│   │   ├── pipeline.py
-│   │   ├── retriever.py
-│   │   └── generator.py
-│   ├── ingestion/
-│   │   └── ingest.py
-│
-├── frontend/
-│   └── app.py
-│
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
+* Extract text from PDFs
+* Clean & normalize content
+* Section-aware chunking with overlap
+* Generate embeddings
+* Store in FAISS with metadata
+
+**Query Pipeline**
+
+1. Query preprocessing & decomposition
+2. Targeted retrieval per sub-query
+3. Controlled reasoning via LLM
+4. Answer aggregation & structuring
+5. Final grounded response
+
+**Evaluation Layer**
+
+* Retrieval: Precision@k
+* Generation: Relevance, groundedness
+* Continuous feedback loop
 
 ---
 
-# ⚙️ Setup & Installation
+## 🧠 Key Design Decisions
 
-## 1. Clone the Repository
+* **Section-aware chunking** → improves retrieval precision
+* **Query decomposition** → handles complex financial queries
+* **Controlled reasoning** → reduces hallucinations
+* **Fallback strategies** → ensures robustness on low-confidence retrieval
+* **Evaluation-first design** → measurable improvements over baseline
+
+---
+
+## 🛡️ Hallucination Mitigation
+
+* Context-constrained prompting
+* Source attribution (traceable outputs)
+* Confidence thresholds for retrieval
+* Answer refusal when context is insufficient
+* Structured reasoning instead of free-form generation
+
+---
+
+## 🔁 Fallback Strategies
+
+* Low-relevance retrieval → retry with expanded query
+* No context found → return “insufficient information”
+* Conflicting answers → rank & reconcile
+* Timeout/LLM failure → cached or simplified response
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer      | Technology                     |
+| ---------- | ------------------------------ |
+| Frontend   | Streamlit                      |
+| Backend    | FastAPI                        |
+| LLM        | OpenAI / Vertex AI             |
+| Embeddings | OpenAI / Sentence Transformers |
+| Vector DB  | FAISS                          |
+| Evaluation | RAGAS                          |
+| Deployment | Vertex AI                      |
+| Container  | Docker                         |
+
+---
+
+## 📁 Project Structure
 
 ```
-git clone <your-repo-url>
+/rag-finance-app
+  /assets
+    rag_architecture.png
+  /backend
+    main.py
+    retrieval.py
+    reasoning.py
+  /frontend
+    app.py
+  /evaluation
+    metrics.py
+  /data
+  Dockerfile
+  requirements.txt
+  README.md
+```
+
+---
+
+## ▶️ Getting Started
+
+### 1. Clone Repo
+
+```bash
+git clone <your-repo>
 cd rag-finance-app
 ```
 
----
+### 2. Create Environment
 
-## 2. Create Environment Variables
-
-Create a `.env` file:
-
-```
-OPENAI_API_KEY=your_api_key
+```bash
+python -m venv virtual
+virtual\Scripts\activate   # Windows
 ```
 
----
+### 3. Install Dependencies
 
-## 3. Run with Docker
-
-```
-docker-compose up --build
+```bash
+pip install -r requirements.txt
 ```
 
----
+### 4. Set Environment Variables
 
-## 🌐 Access the Application
-
-* Frontend: http://localhost:8501
-* Backend: http://localhost:8000
-
----
-
-# 📄 Data Ingestion
-
-To ingest a financial report:
-
-1. Place your PDF inside a data folder
-2. Run ingestion script:
-
-```
-python backend/ingestion/ingest.py
+```bash
+OPENAI_API_KEY=your_key
 ```
 
-> ⚠️ Note: Update the script to point to your PDF file path.
+### 5. Run Backend (FastAPI)
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+### 6. Run Frontend (Streamlit)
+
+```bash
+streamlit run frontend/app.py
+```
 
 ---
 
-# 💬 Usage
+## 🐳 Docker Setup
 
-1. Open the Streamlit UI
-2. Enter a financial query, e.g.:
+### Build Image
 
-   * "What is the total revenue?"
-   * "Summarize the risk factors"
-3. View the generated answer
-
----
-
-# 🔧 Configuration
-
-You can modify:
-
-* Chunk size in ingestion pipeline
-* Number of retrieved documents (`top_k`)
-* LLM model and temperature
-* Embedding model
-
----
-
-# 🚀 Deployment
-
-## Build Docker Image
-
-```
+```bash
 docker build -t rag-finance-app .
 ```
 
-## Push to Registry
+### Run Container
 
+```bash
+docker run -p 8000:8000 rag-finance-app
 ```
-docker push <your-image>
-```
-
-## Deploy
-
-* Vertex AI / Cloud Run (recommended)
-* Any container platform
 
 ---
 
-# 🔁 CI/CD (GitHub Actions)
+## ☁️ Deployment (Vertex AI)
 
-Basic pipeline:
-
-* Build Docker image
-* Push to container registry
-* Deploy to cloud
-
----
-
-# ⚠️ Limitations
-
-* Basic chunking (can be improved)
-* No table-aware extraction yet
-* In-memory vector store (dev only)
-* No authentication
+* Containerize application using Docker
+* Push image to Google Artifact Registry
+* Deploy via Vertex AI endpoint
+* Enable autoscaling and monitoring
 
 ---
 
-# 🔮 Future Improvements
+## 📊 Evaluation Results (Example)
 
-* Section-aware chunking (MD&A, balance sheet, etc.)
-* Table extraction → structured data
-* Source citations with page numbers
-* Multi-document comparison
-* Evaluation metrics (RAG quality)
-
----
-
-# 🧭 Notes
-
-* Financial documents are complex → parsing quality is critical
-* RAG performance depends more on data processing than model choice
-* Use metadata filtering for better accuracy
+| Metric        | Baseline RAG | Enhanced RAG |
+| ------------- | ------------ | ------------ |
+| Precision@5   |    |        |
+| Relevance     |      |          |
+| Hallucination |    |      |
 
 ---
 
-# 📜 License
+## ⚖️ Tradeoffs
+
+| Aspect   | Impact                        |
+| -------- | ----------------------------- |
+| Accuracy | ↑ improved                    |
+| Latency  | ↑ slightly higher             |
+| Cost     | ↑ due to multi-step reasoning |
+
+---
+
+## 🎯 Future Improvements
+
+* Hybrid retrieval (BM25 + vector)
+* Re-ranking models
+* Streaming responses
+* Fine-tuned domain models
+
+---
+
+## 🧾 License
 
 MIT License
 
 ---
 
-# 🤝 Contribution
+## 🙌 Acknowledgements
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
----
-
-# 📬 Contact
-
-For questions or improvements, reach out or open an issue in the repository.
+Inspired by recent research in RAG optimization and LLM reasoning pipelines.
